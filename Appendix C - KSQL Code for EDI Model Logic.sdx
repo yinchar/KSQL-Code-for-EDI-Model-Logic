@@ -1,0 +1,99 @@
+
+
+CREATE TABLE IF NOT EXISTS HistoricalPrecipitation (
+
+    site VARCHAR(255) NOT NULL,
+
+    name VARCHAR(120) NOT NULL,
+
+    day date NOT NULL,
+
+    totalrainfall float NOT NULL
+
+);
+
+
+
+LOAD DATA LOCAL INFILE 
+'D:\\Dropbox\\F_Working\\yinchar\\tahmo_CUT_Farm__Free_State__ZAdata.csv' 
+INTO TABLE historicalprecipitation FIELDS TERMINATED BY ','  IGNORE 1 LINES 
+(site, name, @dayd,totalrainfall)
+ SET day = STR_TO_DATE(@dayd, '%m/%d/%Y');
+ 
+ 
+
+CREATE TABLE IF NOT EXISTS Sum_Precipitation (
+    sum_val float NOT NULL
+);
+
+INSERT INTO sum_precipitation SELECT SUM(totalrainfall) FROM historicalprecipitation;
+
+
+CREATE TABLE IF NOT EXISTS EP (
+    EP_val float NOT NULL
+);
+
+INSERT INTO EP 
+SELECT SUM(totalrainfall)/COUNT(distinct day) FROM historicalprecipitation;
+
+
+CREATE TABLE IF NOT EXISTS MEP (
+    MEP_val float NOT NULL
+);
+
+INSERT INTO MEP 
+SELECT AVG(totalrainfall) FROM historicalprecipitation;
+
+
+
+CREATE TABLE IF NOT EXISTS DEP (
+    DEP_val float NOT NULL
+);
+
+
+INSERT INTO DEP 
+SELECT 
+(
+	SELECT EP_val from EP
+)
+-
+(
+	SELECT MEP_val from MEP
+);
+
+
+
+CREATE TABLE IF NOT EXISTS `SD(DEP)` (
+    `SD(DEP)_val` float NOT NULL
+);
+
+
+INSERT INTO `SD(DEP)` 
+SELECT STDDEV(DEP_val) FROM DEP;
+
+
+
+CREATE TABLE IF NOT EXISTS EDI (
+    EDI_val float NULL
+);
+
+
+
+INSERT INTO EDI 
+SELECT 
+(
+	SELECT DEP_val from DEP
+)
+/
+(
+	SELECT `SD(DEP)_val` from `SD(DEP)`
+);
+
+
+
+
+
+
+
+
+
